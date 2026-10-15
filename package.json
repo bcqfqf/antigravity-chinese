@@ -1,0 +1,21 @@
+{
+  "name": "antigravity-chinese",
+  "version": "1.0.0",
+  "description": "Antigravity 原生扩展式中文本地化套件，提供可视化侧边栏语言管理与安全注入引擎。",
+  "main": "sidecars/panel/server.mjs",
+  "type": "module",
+  "scripts": {
+    "start": "node sidecars/panel/server.mjs",
+    "build:tw": "node scripts/build_tw_dicts.mjs"
+  },
+  "keywords": [
+    "antigravity",
+    "chinese",
+    "localization",
+    "i18n",
+    "dashboard",
+    "plugin"
+  ],
+  "author": "bcqfqf-dotcom",
+  "license": "MIT"
+}

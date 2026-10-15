@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>中文本地化扩展</title>
+  <script src="/preload.js"></script>
+  <style>
+    :root {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      font-size: 12px;
+      /* 浅色主题变量（像素级对齐 Antigrative Dashboard） */
+      --pulse-scheme: light;
+      --pulse-page: #f5f6f8;
+      --pulse-background: #ffffff;
+      --pulse-card: #ffffff;
+      --pulse-card-end: #f7f9fc;
+      --pulse-foreground: #202631;
+      --pulse-chip: #485261;
+      --pulse-muted: #596575;
+      --pulse-subtle: #626d7c;
+      --pulse-label: #515c6b;
+      --pulse-hover: #e9edf3;
+      --pulse-hover-text: #172333;
+      --pulse-accent: #315fc4;
+      --pulse-emphasis: #284e9b;
+      --pulse-border: #ccd3df;
+      --pulse-separator: rgba(24, 37, 59, 0.1);
+      --pulse-track: #dce2ec;
+      --pulse-control: #e8edf4;
+      --pulse-control-text: #354255;
+      --pulse-menu: #ffffff;
+      --pulse-selected: #e4ebf6;
+      --pulse-dot: #707b8a;
+      --pulse-success: #347451;
+      --pulse-success-bg: rgba(52, 116, 81, 0.1);
+      --pulse-warning: #8b601b;
+      --pulse-danger: #b13c3c;
+      --pulse-shadow: rgba(20, 35, 64, 0.12);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --pulse-scheme: dark;
+        --pulse-page: #121315;
+        --pulse-background: #1c1d1f;
+        --pulse-card: #25272b;
+        --pulse-card-end: #2d3035;
+        --pulse-foreground: #e1e3e7;
+        --pulse-chip: #aaaeb6;
+        --pulse-muted: #adb2ba;
+        --pulse-subtle: #a3aab5;
+        --pulse-label: #b8bdc5;
+        --pulse-hover: #292b2e;
+        --pulse-hover-text: #d9dce2;
+        --pulse-accent: #85a8ff;
+        --pulse-emphasis: #dbe5ff;
+        --pulse-border: #3b3f47;
+        --pulse-separator: rgba(255, 255, 255, 0.08);
+        --pulse-track: rgba(255, 255, 255, 0.1);
+        --pulse-control: #32353b;
+        --pulse-control-text: #c2c7d1;
+        --pulse-menu: #303338;
+        --pulse-selected: #444950;
+        --pulse-dot: #777c84;
+        --pulse-success: #8bb19b;
+        --pulse-success-bg: rgba(139, 177, 155, 0.12);
+        --pulse-warning: #d7b079;
+        --pulse-danger: #e99b9b;
+        --pulse-shadow: rgba(0, 0, 0, 0.35);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--pulse-page);
+      color: var(--pulse-foreground);
+      display: flex;
+      justify-content: center;
+      padding: 10px;
+      user-select: none;
+    }
+
+    .widget {
+      color-scheme: var(--pulse-scheme);
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 640px;
+      background: var(--pulse-background);
+      border: 1px solid var(--pulse-border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px var(--pulse-shadow);
+    }
+
+    /* 顶栏 Header */
+    .widget-header {
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 42px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--pulse-separator);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--pulse-foreground);
+    }
+    .brand svg {
+      width: 14px;
+      height: 14px;
+      stroke: var(--pulse-accent);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .connection-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--pulse-dot);
+    }
+    .connection-dot.live {
+      background: var(--pulse-success);
+      box-shadow: 0 0 6px var(--pulse-success);
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .host-pill {
+      font-size: 9.5px;
+      color: var(--pulse-muted);
+      padding: 2px 7px;
+      background: var(--pulse-control);
+      border-radius: 4px;
+      border: 1px solid var(--pulse-separator);
+    }
+    .icon-button {
+      width: 25px;
+      height: 25px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--pulse-muted);
+      cursor: pointer;
+      transition: background-color 120ms ease;
+    }
+    .icon-button:hover {
+      background: var(--pulse-hover);
+      color: var(--pulse-hover-text);
+    }
+    .icon-button svg {
+      width: 13px;
+      height: 13px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .icon-button.busy svg {
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 模块一：当前语言大卡片 (Language Hero) */
+    .hero-card {
+      margin: 12px;
+      padding: 13px 14px;
+      background: linear-gradient(135deg, var(--pulse-card), var(--pulse-card-end));
+      border: 1px solid var(--pulse-border);
+      border-radius: 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .hero-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .hero-label {
+      font-size: 9.5px;
+      color: var(--pulse-muted);
+      letter-spacing: 0.2px;
+    }
+    .hero-lang {
+      font-size: 19px;
+      font-weight: 600;
+      color: var(--pulse-foreground);
+    }
+    .hero-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .hero-badge.active {
+      color: var(--pulse-success);
+      background: var(--pulse-success-bg);
+      border: 1px solid rgba(52, 116, 81, 0.25);
+    }
+    .hero-badge.inactive {
+      color: var(--pulse-muted);
+      background: var(--pulse-control);
+      border: 1px solid var(--pulse-separator);
+    }
+
+    /* 语言分段选择器 */
+    .segmented-control {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      padding: 3px;
+      background: var(--pulse-control);
+      border-radius: 7px;
+    }
+    .seg-item {
+      padding: 6px 0;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--pulse-muted);
+      border-radius: 5px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 120ms ease;
+    }
+    .seg-item:hover {
+      color: var(--pulse-foreground);
+    }
+    .seg-item.selected {
+      background: var(--pulse-background);
+      color: var(--pulse-accent);
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      border-color: var(--pulse-border);
+    }
+
+    /* 模块二：4 个生态板块网格 */
+    .section-title {
+      padding: 0 14px;
+      margin: 4px 0 8px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--pulse-label);
+      display: flex;
+      justify-content: space-between;
+    }
+    .section-title span:last-child {
+      font-weight: 400;
+      color: var(--pulse-muted);
+    }
+
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin: 0 12px 12px;
+    }
+    .matrix-card {
+      padding: 10px 11px;
+      border: 1px solid var(--pulse-separator);
+      border-radius: 8px;
+      background: var(--pulse-background);
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .matrix-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10.5px;
+      font-weight: 600;
+    }
+    .matrix-header svg {
+      width: 12px;
+      height: 12px;
+      stroke: var(--pulse-muted);
+      fill: none;
+      stroke-width: 1.5;
+    }
+    .matrix-status {
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 500;
+    }
+    .matrix-status.ok {
+      color: var(--pulse-success);
+      background: var(--pulse-success-bg);
+    }
+    .matrix-desc {
+      font-size: 9.5px;
+      color: var(--pulse-muted);
+      line-height: 1.4;
+    }
+
+    /* 模块三：偏好与设置 */
+    .pref-card {
+      margin: 0 12px 12px;
+      padding: 11px 13px;
+      background: var(--pulse-card);
+      border: 1px solid var(--pulse-border);
+      border-radius: 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .pref-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10.5px;
+    }
+    .pref-row label {
+      color: var(--pulse-label);
+      font-weight: 500;
+    }
+    select.pref-select {
+      height: 24px;
+      border: 1px solid var(--pulse-border);
+      border-radius: 5px;
+      padding: 0 6px;
+      background: var(--pulse-background);
+      color: var(--pulse-foreground);
+      font-size: 10px;
+      outline: none;
+    }
+
+    /* 模块四：运维与操作按钮 */
+    .action-group {
+      margin: 0 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .btn-main {
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 120ms ease;
+    }
+    .btn-main.primary {
+      background: var(--pulse-accent);
+      color: #ffffff;
+    }
+    .btn-main.primary:hover {
+      background: var(--pulse-emphasis);
+    }
+    .btn-main.secondary {
+      background: var(--pulse-control);
+      color: var(--pulse-foreground);
+      border-color: var(--pulse-separator);
+    }
+    .btn-main.secondary:hover {
+      background: var(--pulse-hover);
+    }
+    .btn-main:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .log-box {
+      margin: 0 12px 10px;
+      padding: 8px 10px;
+      background: var(--pulse-page);
+      border: 1px solid var(--pulse-separator);
+      border-radius: 6px;
+      font-family: Consolas, monospace;
+      font-size: 9.5px;
+      line-height: 1.5;
+      color: var(--pulse-muted);
+      display: none;
+      white-space: pre-wrap;
+    }
+
+    /* 底部信息 */
+    .health-note {
+      padding: 6px 14px 10px;
+      border-top: 1px solid var(--pulse-separator);
+      color: var(--pulse-subtle);
+      font-size: 9.5px;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <main class="widget">
+    <!-- 顶栏 Header -->
+    <header class="widget-header">
+      <div class="brand">
+        <svg viewBox="0 0 16 16"><rect x="3" y="4.5" width="10" height="7" rx="1.5"/><path d="M8 2v12"/></svg>
+        <span>中文本地化中心</span>
+        <span class="connection-dot live" id="statusDot"></span>
+      </div>
+      <div class="header-controls">
+        <span class="host-pill" id="hostPill">v2.23.1 兼容</span>
+      </div>
+    </header>
+
+    <!-- 模块一：Hero 当前语言状态与快捷切换 -->
+    <section class="hero-card">
+      <div class="hero-top">
+        <div class="hero-title-group">
+          <span class="hero-label">当前运行语言</span>
+          <span class="hero-lang" id="currentLangTitle">简体中文</span>
+        </div>
+        <span class="hero-badge active" id="heroBadge">
+          <span class="connection-dot live"></span> 已生效
+        </span>
+      </div>
+
+      <div class="segmented-control">
+        <div class="seg-item selected" id="segZh" onclick="selectLang('zh')">🇨🇳 简体中文</div>
+        <div class="seg-item" id="segTw" onclick="selectLang('tw')">🇭🇰 繁體中文</div>
+        <div class="seg-item" id="segEn" onclick="selectLang('en')">🇺🇸 官方英文</div>
+      </div>
+    </section>
+
+    <!-- 模块二：4 个生态板块覆盖矩阵 -->
+    <div class="section-title">
+      <span>本地化覆盖生态</span>
+      <span id="dictSummaryText">2,825 条词库 · 8 个模块</span>
+    </div>
+
+    <section class="matrix-grid">
+      <div class="matrix-card">
+        <div class="matrix-header">
+          <span>主界面与会话</span>
+          <span class="matrix-status ok">已注入</span>
+        </div>
+        <div class="matrix-desc">侧边栏、对话交互、提示词面板动态汉化</div>
+      </div>
+
+      <div class="matrix-card">
+        <div class="matrix-header">
+          <span>系统原生菜单</span>
+          <span class="matrix-status ok">已注入</span>
+        </div>
+        <div class="matrix-desc">文件、视图、窗口等顶部原生菜单</div>
+      </div>
+
+      <div class="matrix-card">
+        <div class="matrix-header">
+          <span>任务栏与托盘</span>
+          <span class="matrix-status ok">已注入</span>
+        </div>
+        <div class="matrix-desc">右键系统托盘、进程状态与快捷选项</div>
+      </div>
+
+      <div class="matrix-card">
+        <div class="matrix-header">
+          <span>代码安全隔离</span>
+          <span class="matrix-status ok">免疫保护</span>
+        </div>
+        <div class="matrix-desc">Monaco / Xterm 终端物理隔离防误伤</div>
+      </div>
+    </section>
+
+    <!-- 模块三：偏好与设置 -->
+    <div class="section-title"><span>显示偏好</span></div>
+    <section class="pref-card">
+      <div class="pref-row">
+        <label for="brandSelect">左上角品牌名展示</label>
+        <select class="pref-select" id="brandSelect" onchange="updateBrandSetting()">
+          <option value="english" selected>Antigravity (默认)</option>
+          <option value="hidden">隐藏品牌名</option>
+          <option value="translated">反重力智能编程</option>
+        </select>
+      </div>
+      <div class="pref-row">
+        <label>更新自动防护</label>
+        <span style="font-size: 10px; color: var(--pulse-success);">常驻全局扩展中心 (更新不丢失)</span>
+      </div>
+    </section>
+
+    <!-- 模块四：运维与操作按钮 -->
+    <div class="action-group">
+      <button class="btn-main primary" id="btnApply" onclick="applyLocalization()">
+        ⚡ 重新注入 / 修复中文 (更新后点此)
+      </button>
+      <button class="btn-main secondary" id="btnRestore" onclick="restoreOfficial()">
+        🔄 还原为官方英文原版
+      </button>
+    </div>
+
+    <div class="log-box" id="logBox"></div>
+
+    <!-- 底部状态注脚 -->
+    <footer class="health-note">
+      <span id="updateTime">状态检测就绪 · 原生 Sidecar 扩展</span>
+      <span>备份保护: <b id="backupLabel">已就绪</b></span>
+    </footer>
+  </main>
+
+  <script>
+    function apiFetch(path, options = {}) {
+      const token = new URLSearchParams(window.location.search).get('token');
+      const url = token ? (path + (path.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token)) : path;
+      const headers = new Headers(options.headers || {});
+      if (token) {
+        headers.set('X-Sidecar-Token', token);
+      }
+      return fetch(url, { ...options, headers });
+    }
+
+    let activeLang = 'zh';
+
+    async function loadStatus() {
+      try {
+        const res = await apiFetch('/api/status');
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('hostPill').textContent = `v${data.version || '2.23.1'} 兼容`;
+          document.getElementById('dictSummaryText').textContent = `${(data.dictEntries || 2825).toLocaleString()} 条词库 · 8 个模块`;
+
+          if (data.installed) {
+            const isTw = data.currentLang === 'tw';
+            activeLang = isTw ? 'tw' : 'zh';
+            document.getElementById('currentLangTitle').textContent = isTw ? '繁體中文' : '简体中文';
+            document.getElementById('statusDot').className = 'connection-dot live';
+            document.getElementById('heroBadge').className = 'hero-badge active';
+            document.getElementById('heroBadge').innerHTML = '<span class="connection-dot live"></span> 已生效';
+            setSegmentSelected(activeLang);
+          } else {
+            activeLang = 'en';
+            document.getElementById('currentLangTitle').textContent = '官方英文 (English)';
+            document.getElementById('statusDot').className = 'connection-dot';
+            document.getElementById('heroBadge').className = 'hero-badge inactive';
+            document.getElementById('heroBadge').textContent = '未激活';
+            setSegmentSelected('en');
+          }
+
+          document.getElementById('backupLabel').textContent = data.hasBackup ? '已就绪 (app.asar.bak)' : '未备份';
+
+          const now = new Date();
+          const timeStr = now.toTimeString().split(' ')[0];
+          document.getElementById('updateTime').textContent = `状态更新于 ${timeStr} · 真实系统检测`;
+        }
+      } catch (e) {
+        console.error('Failed to load status:', e);
+      }
+    }
+
+    function setSegmentSelected(lang) {
+      activeLang = lang;
+      document.getElementById('segZh').className = 'seg-item' + (lang === 'zh' ? ' selected' : '');
+      document.getElementById('segTw').className = 'seg-item' + (lang === 'tw' ? ' selected' : '');
+      document.getElementById('segEn').className = 'seg-item' + (lang === 'en' ? ' selected' : '');
+    }
+
+    async function selectLang(lang) {
+      if (lang === activeLang) return;
+      setSegmentSelected(lang);
+      if (lang === 'en') {
+        await restoreOfficial();
+      } else {
+        await applyLocalization(lang);
+      }
+    }
+
+    async function applyLocalization(lang) {
+      const targetLang = lang || (activeLang === 'en' ? 'zh' : activeLang);
+      const btn = document.getElementById('btnApply');
+      const logBox = document.getElementById('logBox');
+      const brand = document.getElementById('brandSelect').value;
+      btn.disabled = true;
+      btn.textContent = '⏳ 正在注入...';
+      logBox.style.display = 'block';
+      logBox.textContent = `正在注入本地化资源 (${targetLang === 'tw' ? '繁體中文' : '简体中文'})...\n`;
+
+      try {
+        const res = await apiFetch('/api/apply', {
+          method: 'POST',
+          body: JSON.stringify({ brandTitle: brand, lang: targetLang })
+        });
+        const result = await res.json();
+        logBox.textContent += (result.message || '注入成功！') + '\n\n👉 操作已完成！请直接关闭并重新打开 Antigravity 即可完全生效。';
+        await loadStatus();
+      } catch (err) {
+        logBox.textContent += '执行出错: ' + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '⚡ 重新注入 / 修复中文 (更新后点此)';
+      }
+    }
+
+    async function restoreOfficial() {
+      const btn = document.getElementById('btnRestore');
+      const logBox = document.getElementById('logBox');
+      btn.disabled = true;
+      btn.textContent = '⏳ 正在还原为官方英文...';
+      logBox.style.display = 'block';
+      logBox.textContent = '正在还原官方原版英文文件 (app.asar)...\n';
+
+      try {
+        const res = await apiFetch('/api/restore', { method: 'POST' });
+        const result = await res.json();
+        logBox.textContent += (result.message || '还原完成！') + '\n\n👉 官方原版已恢复！请直接关闭并重新打开 Antigravity 即可完全生效。';
+        await loadStatus();
+      } catch (err) {
+        logBox.textContent += '还原出错: ' + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔄 还原为官方英文原版';
+      }
+    }
+
+    function updateBrandSetting() {
+      const brand = document.getElementById('brandSelect').value;
+      localStorage.setItem('ag_brand_mode', brand);
+    }
+
+    window.addEventListener('message', (event) => {
+      if (event.data?.type === 'theme-change') {
+        const vars = event.data.payload.cssVariables;
+        for (const [key, value] of Object.entries(vars)) {
+          document.documentElement.style.setProperty(key, value);
+        }
+      }
+    });
+
+    const savedBrand = localStorage.getItem('ag_brand_mode');
+    if (savedBrand) {
+      document.getElementById('brandSelect').value = savedBrand;
+    }
+
+    loadStatus();
+  </script>
+</body>
+</html>

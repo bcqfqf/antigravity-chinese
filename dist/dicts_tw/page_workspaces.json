@@ -1,0 +1,7 @@
+{
+    "Loading conversation...": "正在加載對話...",
+    "Failed to load conversation": "加載對話失敗",
+    "Failed to delete conversation": "刪除對話失敗",
+    "Conversation History": "對話歷史",
+    "When enabled, this agent will be able to access past conversations to inform its responses.": "啟用後，此智能體將能夠訪問過去的對話記錄，以為其響應提供參考。"
+}
