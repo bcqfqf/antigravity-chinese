@@ -66,7 +66,7 @@ antigravity-chinese/
 ```bash
 # Windows PowerShell
 cd $env:USERPROFILE\.gemini\config\plugins
-git clone https://github.com/bcqfqf-dotcom/antigravity-chinese.git antigravity-chinese
+git clone https://github.com/bcqfqf/antigravity-chinese.git antigravity-chinese
 ```
 
 在 `~/.gemini/config/config.json` 的 `plugins` 中注册启用：
