@@ -1491,10 +1491,15 @@ function install20(resourcesDir) {
         let ipcContent = fs.readFileSync(ipcHandlersPath, 'utf-8');
         let ipcCleaned = cleanIpcHandlersJsContent(ipcContent);
 
-        const targetContextMenu = /function\s+buildContextMenuTemplate\s*\(\s*items\s*,\s*onSelect\s*\)\s*\{/;
-        const replacementContextMenu = `function buildContextMenuTemplate(items, onSelect) {
-    /* --- CONTEXT MENU TRANSLATION START --- */
-    const _cmTranslations = ${USE_TW ? `{
+        const fullDict = loadDictionary();
+        const shortDict = {};
+        for (const [k, v] of Object.entries(fullDict)) {
+            if (k.length <= 40 && !k.includes('\n') && !k.includes('{') && !k.includes('<') && !k.includes('\\')) {
+                shortDict[k] = v;
+            }
+        }
+
+        const curatedTranslations = USE_TW ? {
         'Rename': '重新命名',
         'Pin': '釘選',
         'Unpin': '取消釘選',
@@ -1511,17 +1516,36 @@ function install20(resourcesDir) {
         'Copy Conversation Link': '複製對話連結',
         'Copy Message': '複製訊息',
         'Copy Text': '複製文字',
+        'Conversation Name': '對話名稱',
+        'Conversation ID': '對話 ID',
+        'Project Name': '專案名稱',
+        'Workspace Name': '工作區名稱',
+        'Branch Name': '分支名稱',
+        'Commit Hash': '提交雜湊',
+        'Commit SHA': '提交 SHA',
+        'File Path': '檔案路徑',
+        'Relative Path': '相對路徑',
+        'Absolute Path': '絕對路徑',
         'Split': '分割',
         'Split Right': '向右分割',
         'Split Down': '向下分割',
         'Split Up': '向上分割',
         'Split Left': '向左分割',
+        'Right': '向右分割',
+        'Down': '向下分割',
+        'Up': '向上分割',
+        'Left': '向左分割',
+        'Horizontal': '水平分割',
+        'Vertical': '垂直分割',
+        'Horizontally': '水平分割',
+        'Vertically': '垂直分割',
         'Split Horizontally': '水平分割',
         'Split Vertically': '垂直分割',
         'Split Conversation': '分割對話',
         'Split Conversation Horizontally': '水平分割對話',
         'Split Conversation Vertically': '垂直分割對話',
         'Close Split': '關閉分割',
+        'Replace With New': '替換為新對話',
         'Archive': '封存',
         'Unarchive': '取消封存',
         'Delete': '刪除',
@@ -1551,7 +1575,7 @@ function install20(resourcesDir) {
         'New File': '新增檔案',
         'New Folder': '新增資料夾',
         'Open Containing Folder': '開啟所在資料夾'
-    }` : `{
+    } : {
         'Rename': '重命名',
         'Pin': '置顶',
         'Unpin': '取消置顶',
@@ -1568,17 +1592,36 @@ function install20(resourcesDir) {
         'Copy Conversation Link': '复制会话链接',
         'Copy Message': '复制消息',
         'Copy Text': '复制文本',
+        'Conversation Name': '会话名称',
+        'Conversation ID': '会话 ID',
+        'Project Name': '项目名称',
+        'Workspace Name': '工作区名称',
+        'Branch Name': '分支名称',
+        'Commit Hash': '提交哈希',
+        'Commit SHA': '提交 SHA',
+        'File Path': '文件路径',
+        'Relative Path': '相对路径',
+        'Absolute Path': '绝对路径',
         'Split': '拆分',
         'Split Right': '向右拆分',
         'Split Down': '向下拆分',
         'Split Up': '向上拆分',
         'Split Left': '向左拆分',
+        'Right': '向右拆分',
+        'Down': '向下拆分',
+        'Up': '向上拆分',
+        'Left': '向左拆分',
+        'Horizontal': '水平拆分',
+        'Vertical': '垂直拆分',
+        'Horizontally': '水平拆分',
+        'Vertically': '垂直拆分',
         'Split Horizontally': '水平拆分',
         'Split Vertically': '垂直拆分',
         'Split Conversation': '拆分会话',
         'Split Conversation Horizontally': '水平拆分会话',
         'Split Conversation Vertically': '垂直拆分会话',
         'Close Split': '关闭拆分',
+        'Replace With New': '替换为新会话',
         'Archive': '归档',
         'Unarchive': '取消归档',
         'Delete': '删除',
@@ -1608,7 +1651,15 @@ function install20(resourcesDir) {
         'New File': '新建文件',
         'New Folder': '新建文件夹',
         'Open Containing Folder': '打开所在文件夹'
-    }`};
+    };
+
+        const mergedCmTranslations = Object.assign({}, shortDict, curatedTranslations);
+        const cmDictJson = JSON.stringify(mergedCmTranslations);
+
+        const targetContextMenu = /function\s+buildContextMenuTemplate\s*\(\s*items\s*,\s*onSelect\s*\)\s*\{/;
+        const replacementContextMenu = `function buildContextMenuTemplate(items, onSelect) {
+    /* --- CONTEXT MENU TRANSLATION START --- */
+    const _cmTranslations = ${cmDictJson};
     if (Array.isArray(items)) {
         for (const it of items) {
             if (it && typeof it.label === 'string') {
