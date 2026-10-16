@@ -69,6 +69,8 @@ if (USE_TW) {
         "[修改] 菜单汉化注入成功！": "[修改] 選單漢化注入成功！",
         "[修改] 正在向 tray.js 注入任务栏菜单汉化...": "[修改] 正在向 tray.js 注入系統匣選單漢化...",
         "[修改] 任务栏菜单汉化注入成功！": "[修改] 系統匣選單漢化注入成功！",
+        "[修改] 正在向 ipcHandlers.js 注入右键菜单汉化代码...": "[修改] 正在向 ipcHandlers.js 注入右鍵選單漢化程式碼...",
+        "[修改] 右键菜单汉化注入成功！": "[修改] 右鍵選單漢化注入成功！",
         "[修改] 正在向 loadingOverlay.js 注入加载页汉化...": "[修改] 正在向 loadingOverlay.js 注入載入頁漢化...",
         "[修改] 加载页汉化注入成功！": "[修改] 載入頁漢化注入成功！",
         "[修改] 正在向 updater.js 注入更新弹窗汉化...": "[修改] 正在向 updater.js 注入更新彈出視窗漢化...",
@@ -980,6 +982,10 @@ function cleanTrayJsContent(content) {
     return content;
 }
 
+function cleanIpcHandlersJsContent(content) {
+    return content.replace(/\n\s*\/\* --- CONTEXT MENU TRANSLATION START --- \*\/[\s\S]*?\/\* --- CONTEXT MENU TRANSLATION END --- \*\//g, '');
+}
+
 function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -1478,7 +1484,155 @@ function install20(resourcesDir) {
         console.log(`[修改] 任务栏菜单汉化注入成功！`);
     }
 
-    // 3.3 注入 loadingOverlay.js (加载页汉化)
+    // 3.3 注入 ipcHandlers.js (上下文右键菜单汉化)
+    const ipcHandlersPath = path.join(tempDir, "dist", "ipcHandlers.js");
+    if (fs.existsSync(ipcHandlersPath)) {
+        console.log(`[修改] 正在向 ipcHandlers.js 注入右键菜单汉化代码...`);
+        let ipcContent = fs.readFileSync(ipcHandlersPath, 'utf-8');
+        let ipcCleaned = cleanIpcHandlersJsContent(ipcContent);
+
+        const targetContextMenu = /function\s+buildContextMenuTemplate\s*\(\s*items\s*,\s*onSelect\s*\)\s*\{/;
+        const replacementContextMenu = `function buildContextMenuTemplate(items, onSelect) {
+    /* --- CONTEXT MENU TRANSLATION START --- */
+    const _cmTranslations = ${USE_TW ? `{
+        'Rename': '重新命名',
+        'Pin': '釘選',
+        'Unpin': '取消釘選',
+        'Mark Unread': '標記為未讀',
+        'Mark Read': '標記為已讀',
+        'Mark as Read': '標記為已讀',
+        'Mark as Unread': '標記為未讀',
+        'Copy': '複製',
+        'Copy Link': '複製連結',
+        'Copy Title': '複製標題',
+        'Copy ID': '複製 ID',
+        'Copy Path': '複製路徑',
+        'Copy Relative Path': '複製相對路徑',
+        'Copy Conversation Link': '複製對話連結',
+        'Copy Message': '複製訊息',
+        'Copy Text': '複製文字',
+        'Split': '分割',
+        'Split Right': '向右分割',
+        'Split Down': '向下分割',
+        'Split Up': '向上分割',
+        'Split Left': '向左分割',
+        'Split Horizontally': '水平分割',
+        'Split Vertically': '垂直分割',
+        'Split Conversation': '分割對話',
+        'Split Conversation Horizontally': '水平分割對話',
+        'Split Conversation Vertically': '垂直分割對話',
+        'Close Split': '關閉分割',
+        'Archive': '封存',
+        'Unarchive': '取消封存',
+        'Delete': '刪除',
+        'Delete Conversation': '刪除對話',
+        'Cut': '剪下',
+        'Paste': '貼上',
+        'Select All': '全選',
+        'Undo': '復原',
+        'Redo': '重做',
+        'Duplicate': '建立副本',
+        'Share': '分享',
+        'Export': '匯出',
+        'Close': '關閉',
+        'Close Others': '關閉其他',
+        'Close All': '全部關閉',
+        'Close to the Right': '關閉右側',
+        'Close Saved': '關閉已儲存',
+        'Open in New Window': '在新視窗中開啟',
+        'Open in Default App': '在預設應用程式中開啟',
+        'Show in File Explorer': '在檔案總管中顯示',
+        'Reveal in Finder': '在 Finder 中顯示',
+        'Reveal in File Explorer': '在檔案總管中顯示',
+        'Inspect Element': '檢查元素',
+        'Inspect': '檢查',
+        'Reload': '重新載入',
+        'Toggle Developer Tools': '切換開發人員工具',
+        'New File': '新增檔案',
+        'New Folder': '新增資料夾',
+        'Open Containing Folder': '開啟所在資料夾'
+    }` : `{
+        'Rename': '重命名',
+        'Pin': '置顶',
+        'Unpin': '取消置顶',
+        'Mark Unread': '标记为未读',
+        'Mark Read': '标记为已读',
+        'Mark as Read': '标记为已读',
+        'Mark as Unread': '标记为未读',
+        'Copy': '复制',
+        'Copy Link': '复制链接',
+        'Copy Title': '复制标题',
+        'Copy ID': '复制 ID',
+        'Copy Path': '复制路径',
+        'Copy Relative Path': '复制相对路径',
+        'Copy Conversation Link': '复制会话链接',
+        'Copy Message': '复制消息',
+        'Copy Text': '复制文本',
+        'Split': '拆分',
+        'Split Right': '向右拆分',
+        'Split Down': '向下拆分',
+        'Split Up': '向上拆分',
+        'Split Left': '向左拆分',
+        'Split Horizontally': '水平拆分',
+        'Split Vertically': '垂直拆分',
+        'Split Conversation': '拆分会话',
+        'Split Conversation Horizontally': '水平拆分会话',
+        'Split Conversation Vertically': '垂直拆分会话',
+        'Close Split': '关闭拆分',
+        'Archive': '归档',
+        'Unarchive': '取消归档',
+        'Delete': '删除',
+        'Delete Conversation': '删除会话',
+        'Cut': '剪切',
+        'Paste': '粘贴',
+        'Select All': '全选',
+        'Undo': '撤销',
+        'Redo': '重做',
+        'Duplicate': '创建副本',
+        'Share': '分享',
+        'Export': '导出',
+        'Close': '关闭',
+        'Close Others': '关闭其他',
+        'Close All': '全部关闭',
+        'Close to the Right': '关闭右侧',
+        'Close Saved': '关闭已保存',
+        'Open in New Window': '在新窗口中打开',
+        'Open in Default App': '在默认应用中打开',
+        'Show in File Explorer': '在文件资源管理器中显示',
+        'Reveal in Finder': '在访达中显示',
+        'Reveal in File Explorer': '在文件资源管理器中显示',
+        'Inspect Element': '检查元素',
+        'Inspect': '检查',
+        'Reload': '重新加载',
+        'Toggle Developer Tools': '切换开发者工具',
+        'New File': '新建文件',
+        'New Folder': '新建文件夹',
+        'Open Containing Folder': '打开所在文件夹'
+    }`};
+    if (Array.isArray(items)) {
+        for (const it of items) {
+            if (it && typeof it.label === 'string') {
+                const trimmed = it.label.trim();
+                if (_cmTranslations[trimmed]) {
+                    it.label = it.label.replace(trimmed, _cmTranslations[trimmed]);
+                } else if (_cmTranslations[it.label]) {
+                    it.label = _cmTranslations[it.label];
+                }
+            }
+        }
+    }
+    /* --- CONTEXT MENU TRANSLATION END --- */`;
+
+        let ipcPatched = ipcCleaned.replace(targetContextMenu, replacementContextMenu);
+        if (ipcPatched === ipcCleaned) {
+            console.warn(`[警告] 未能在 ipcHandlers.js 中找到 buildContextMenuTemplate 函数插入点。`);
+        } else {
+            fs.writeFileSync(ipcHandlersPath, ipcPatched, 'utf-8');
+            console.log(`[修改] 右键菜单汉化注入成功！`);
+        }
+    }
+
+    // 3.4 注入 loadingOverlay.js (加载页汉化)
     const loadingPath = path.join(tempDir, "dist", "loadingOverlay.js");
     if (fs.existsSync(loadingPath)) {
         console.log(`[修改] 正在向 loadingOverlay.js 注入加载页汉化...`);

@@ -81,8 +81,8 @@
     "Search for commands...": "搜索命令...",
     "Search for commands": "搜索命令",
     "Split Terminal": "拆分終端",
-    "Split Conversation Horizontally": "水平拆分會話",
-    "Split Conversation Vertically": "垂直拆分會話",
+    "Split Conversation Horizontally": "水平分割對話",
+    "Split Conversation Vertically": "垂直分割對話",
     "Find in conversation": "在會話中查找",
     "Toggle Between Light/Dark Themes": "切換淺色/深色主題"
 }
