@@ -1,7 +1,7 @@
 {
   "name": "antigravity-chinese",
-  "version": "1.0.3",
-  "description": "Antigravity 原生扩展式中文本地化套件，提供可视化侧边栏语言管理与安全注入引擎。",
+  "version": "1.1.0",
+  "description": "Antigravity 原生扩展式中文本地化套件，提供可视化侧边栏语言管理、自动更新补全与安全注入引擎。",
   "main": "sidecars/panel/server.mjs",
   "type": "module",
   "scripts": {

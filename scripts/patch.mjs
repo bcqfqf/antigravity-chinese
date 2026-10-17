@@ -35,7 +35,12 @@ export function applyPatch(brand = 'english', lang = 'zh') {
     try {
       const distDir = join(__dirname, '..', 'dist');
       if (!existsSync(distDir)) mkdirSync(distDir, { recursive: true });
-      writeFileSync(join(distDir, 'config.json'), JSON.stringify({ enabled: true, brand, lang }, null, 2));
+      const configFile = join(distDir, 'config.json');
+      let currentConfig = {};
+      if (existsSync(configFile)) {
+        try { currentConfig = JSON.parse(readFileSync(configFile, 'utf8')); } catch {}
+      }
+      writeFileSync(configFile, JSON.stringify({ autoPatchOnUpdate: true, autoRestartOnUpdate: false, ...currentConfig, enabled: true, brand, lang }, null, 2));
     } catch {}
     return { success: true, message: `${lang === 'tw' ? '繁體中文' : '簡體中文'}注入成功！界面已即时生效。`, stdout: out };
   } catch (err) {
@@ -52,7 +57,12 @@ export function restorePatch() {
     try {
       const distDir = join(__dirname, '..', 'dist');
       if (!existsSync(distDir)) mkdirSync(distDir, { recursive: true });
-      writeFileSync(join(distDir, 'config.json'), JSON.stringify({ enabled: false }, null, 2));
+      const configFile = join(distDir, 'config.json');
+      let currentConfig = {};
+      if (existsSync(configFile)) {
+        try { currentConfig = JSON.parse(readFileSync(configFile, 'utf8')); } catch {}
+      }
+      writeFileSync(configFile, JSON.stringify({ ...currentConfig, enabled: false }, null, 2));
     } catch {}
     return { success: true, message: '已成功还原官方原版英文状态！' };
   } catch (err) {

@@ -2,6 +2,6 @@
   "name": "antigravity-chinese",
   "display_name": "中文语言套件 (Chinese Localization)",
   "description": "Antigravity 原生扩展式中文本地化套件，提供可视化侧边栏语言管理与热加载汉化引擎。",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "logo": "assets/logo.svg"
 }

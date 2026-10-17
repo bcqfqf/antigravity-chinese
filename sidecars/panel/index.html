@@ -414,6 +414,51 @@
       display: flex;
       justify-content: space-between;
     }
+
+    /* 重启横幅样式 */
+    .restart-banner {
+      margin: 10px 12px 2px;
+      padding: 9px 12px;
+      background: var(--pulse-selected);
+      border: 1px solid var(--pulse-accent);
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .restart-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .restart-icon {
+      font-size: 15px;
+    }
+    .restart-title {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--pulse-foreground);
+    }
+    .restart-sub {
+      font-size: 9px;
+      color: var(--pulse-muted);
+    }
+    .btn-restart-action {
+      background: var(--pulse-accent);
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 5px 10px;
+      font-size: 10px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 120ms ease;
+    }
+    .btn-restart-action:hover {
+      background: var(--pulse-emphasis);
+    }
   </style>
 </head>
 <body>
@@ -429,6 +474,18 @@
         <span class="host-pill" id="hostPill">v2.23.1 兼容</span>
       </div>
     </header>
+
+    <!-- 客户端重启引导 Banner -->
+    <div class="restart-banner" id="restartBanner" style="display: none;">
+      <div class="restart-info">
+        <span class="restart-icon">✨</span>
+        <div>
+          <div class="restart-title" id="restartBannerTitle">官方版本已更新，汉化已自动补全！</div>
+          <div class="restart-sub">重启客户端即可立即加载最新中文模块</div>
+        </div>
+      </div>
+      <button class="btn-restart-action" id="btnRestartBanner" onclick="restartClient()">🔄 立即重启</button>
+    </div>
 
     <!-- 模块一：Hero 当前语言状态与快捷切换 -->
     <section class="hero-card">
@@ -501,18 +558,25 @@
         </select>
       </div>
       <div class="pref-row">
-        <label>更新自动防护</label>
-        <span style="font-size: 10px; color: var(--pulse-success);">常驻全局扩展中心 (更新不丢失)</span>
+        <label for="autoPatchToggle">官方更新后自动补全汉化</label>
+        <input type="checkbox" id="autoPatchToggle" onchange="updateAutoPatchSetting(this.checked)" checked style="cursor: pointer; accent-color: var(--pulse-accent);">
+      </div>
+      <div class="pref-row">
+        <label for="autoRestartToggle">自动注入后静默重启客户端</label>
+        <input type="checkbox" id="autoRestartToggle" onchange="updateAutoRestartSetting(this.checked)" style="cursor: pointer; accent-color: var(--pulse-accent);">
       </div>
     </section>
 
     <!-- 模块四：运维与操作按钮 -->
     <div class="action-group">
       <button class="btn-main primary" id="btnApply" onclick="applyLocalization()">
-        ⚡ 重新注入 / 修复中文 (更新后点此)
+        ⚡ 重新注入 / 修复中文
+      </button>
+      <button class="btn-main secondary" id="btnRestartApp" onclick="restartClient()">
+        🔄 一键重启 Antigravity 客户端
       </button>
       <button class="btn-main secondary" id="btnRestore" onclick="restoreOfficial()">
-        🔄 还原为官方英文原版
+        ↩️ 还原为官方英文原版
       </button>
     </div>
 
@@ -563,6 +627,25 @@
             setSegmentSelected('en');
           }
 
+          if (data.autoPatchOnUpdate !== undefined) {
+            document.getElementById('autoPatchToggle').checked = !!data.autoPatchOnUpdate;
+          }
+          if (data.autoRestartOnUpdate !== undefined) {
+            document.getElementById('autoRestartToggle').checked = !!data.autoRestartOnUpdate;
+          }
+
+          const banner = document.getElementById('restartBanner');
+          if (data.pendingRestart) {
+            banner.style.display = 'flex';
+            if (data.lastAutoPatchInfo) {
+              document.getElementById('restartBannerTitle').textContent = `官方版本已更新，已于 ${data.lastAutoPatchInfo.time} 自动补全汉化！`;
+            } else {
+              document.getElementById('restartBannerTitle').textContent = '本地化已成功注入，重启客户端即可生效！';
+            }
+          } else {
+            banner.style.display = 'none';
+          }
+
           document.getElementById('backupLabel').textContent = data.hasBackup ? '已就绪 (app.asar.bak)' : '未备份';
 
           const now = new Date();
@@ -607,13 +690,14 @@
           body: JSON.stringify({ brandTitle: brand, lang: targetLang })
         });
         const result = await res.json();
-        logBox.textContent += (result.message || '注入成功！') + '\n\n👉 操作已完成！请直接关闭并重新打开 Antigravity 即可完全生效。';
+        logBox.textContent += (result.message || '注入成功！') + '\n\n👉 操作已完成！点击上方“🔄 立即重启”或重新打开 Antigravity 即可完全生效。';
+        document.getElementById('restartBanner').style.display = 'flex';
         await loadStatus();
       } catch (err) {
         logBox.textContent += '执行出错: ' + err.message;
       } finally {
         btn.disabled = false;
-        btn.textContent = '⚡ 重新注入 / 修复中文 (更新后点此)';
+        btn.textContent = '⚡ 重新注入 / 修复中文';
       }
     }
 
@@ -628,19 +712,82 @@
       try {
         const res = await apiFetch('/api/restore', { method: 'POST' });
         const result = await res.json();
-        logBox.textContent += (result.message || '还原完成！') + '\n\n👉 官方原版已恢复！请直接关闭并重新打开 Antigravity 即可完全生效。';
+        logBox.textContent += (result.message || '还原完成！') + '\n\n👉 官方原版已恢复！点击上方“🔄 立即重启”或重新打开 Antigravity 即可完全生效。';
+        document.getElementById('restartBanner').style.display = 'flex';
+        document.getElementById('restartBannerTitle').textContent = '已恢复官方原版，重启客户端后生效！';
         await loadStatus();
       } catch (err) {
         logBox.textContent += '还原出错: ' + err.message;
       } finally {
         btn.disabled = false;
-        btn.textContent = '🔄 还原为官方英文原版';
+        btn.textContent = '↩️ 还原为官方英文原版';
+      }
+    }
+
+    async function restartClient() {
+      const btn = document.getElementById('btnRestartApp');
+      const btnBanner = document.getElementById('btnRestartBanner');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ 正在重启...';
+      }
+      if (btnBanner) {
+        btnBanner.disabled = true;
+        btnBanner.textContent = '⏳ 正在重启...';
+      }
+      const logBox = document.getElementById('logBox');
+      logBox.style.display = 'block';
+      logBox.textContent = '正在通过系统指令优雅重启 Antigravity 客户端...\n';
+
+      try {
+        const res = await apiFetch('/api/restart', { method: 'POST' });
+        const result = await res.json();
+        logBox.textContent += (result.message || '重启指令已下发，客户端即将关闭并重新加载！');
+      } catch (err) {
+        logBox.textContent += '重启请求失败: ' + err.message + '，请直接手动重启客户端。';
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '🔄 一键重启 Antigravity 客户端';
+        }
+        if (btnBanner) {
+          btnBanner.disabled = false;
+          btnBanner.textContent = '🔄 立即重启';
+        }
+      }
+    }
+
+    async function updateAutoPatchSetting(checked) {
+      try {
+        await apiFetch('/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ autoPatchOnUpdate: checked })
+        });
+      } catch (e) {
+        console.error('Failed to update auto patch setting:', e);
+      }
+    }
+
+    async function updateAutoRestartSetting(checked) {
+      try {
+        await apiFetch('/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ autoRestartOnUpdate: checked })
+        });
+      } catch (e) {
+        console.error('Failed to update auto restart setting:', e);
       }
     }
 
     function updateBrandSetting() {
       const brand = document.getElementById('brandSelect').value;
       localStorage.setItem('ag_brand_mode', brand);
+      apiFetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brand })
+      }).catch(() => {});
     }
 
     window.addEventListener('message', (event) => {
@@ -658,6 +805,8 @@
     }
 
     loadStatus();
+    // 每 10 秒自动巡检一次面板状态
+    setInterval(loadStatus, 10000);
   </script>
 </body>
 </html>
