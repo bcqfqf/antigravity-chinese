@@ -1546,6 +1546,7 @@ function install20(resourcesDir) {
         'Split Conversation Vertically': '垂直分割對話',
         'Close Split': '關閉分割',
         'Replace With New': '替換為新對話',
+        'Replace with New': '替換為新對話',
         'Archive': '封存',
         'Unarchive': '取消封存',
         'Delete': '刪除',
@@ -1622,6 +1623,7 @@ function install20(resourcesDir) {
         'Split Conversation Vertically': '垂直拆分会话',
         'Close Split': '关闭拆分',
         'Replace With New': '替换为新会话',
+        'Replace with New': '替换为新会话',
         'Archive': '归档',
         'Unarchive': '取消归档',
         'Delete': '删除',
@@ -1660,12 +1662,19 @@ function install20(resourcesDir) {
         const replacementContextMenu = `function buildContextMenuTemplate(items, onSelect) {
     /* --- CONTEXT MENU TRANSLATION START --- */
     const _cmTranslations = ${cmDictJson};
+    const _cmLower = {};
+    for (const k in _cmTranslations) {
+        _cmLower[k.toLowerCase()] = _cmTranslations[k];
+    }
     if (Array.isArray(items)) {
         for (const it of items) {
             if (it && typeof it.label === 'string') {
                 const trimmed = it.label.trim();
+                const lower = trimmed.toLowerCase();
                 if (_cmTranslations[trimmed]) {
                     it.label = it.label.replace(trimmed, _cmTranslations[trimmed]);
+                } else if (_cmLower[lower]) {
+                    it.label = it.label.replace(trimmed, _cmLower[lower]);
                 } else if (_cmTranslations[it.label]) {
                     it.label = _cmTranslations[it.label];
                 }
